@@ -1,0 +1,324 @@
+d={
+    'S':{'A':3,'B':5},
+    'A':{'S':3,'B':4,'D':3},
+    'B':{'S':5,'A':4,'C':4},
+    'C':{'B':4,'E':6},
+    'E':{'C':6},
+    'D':{'A':3,'G':5},
+    'G':{'D':5}
+}
+d_h={
+    'S':{'A':7.38,'B':6},
+    'A':{'S':0,'B':6,'D':5},
+    'B':{'S':0,'A':7.38,'C':7.58},
+    'C':{'B':6,'E':0},
+    'E':{'C':7.58},
+    'D':{'A':7.38,'G':0},
+    'G':{'D':5}
+}
+def oracle_search(d,start,goal,max_no_goalcutoff):
+    queue=[[0,start]]
+    res=[]
+    g=goal
+    f=0
+    n_g=max_no_goalcutoff
+    while (len(queue)!=0):
+        tmp=[]
+        curr=queue.pop(0)         
+        currnode=curr[-1]          
+        for i in d[currnode].keys():
+            if i in curr:continue 
+            tmp1=curr+list(i)
+            tmp1[0]=curr[0]+d[currnode][i]
+            tmp.append(tmp1)
+            queue.append(tmp1)
+            queue.sort(key=lambda k1:k1[0])  
+            if g==i:f+=1
+        for i in tmp:res.append(i)
+        if(f==n_g):break
+    print(res)
+    goal_node=[]
+    for i in res:
+        if 'G' in i:goal_node.append(i)
+    print('Oracle Paths:',goal_node)
+    return goal_node
+def BMS(d,start,goal,max_no_goalcutoff):
+    queue=[[start]]
+    res=[]
+    g=goal
+    f=0
+    n_g=max_no_goalcutoff
+    while (len(queue)!=0):
+        tmp=[]
+        curr=queue.pop(0)
+        currnode=curr[-1][-1]
+        for i in d[currnode].keys():
+            if i in curr:continue
+            tmp1=curr+list(i)
+            tmp.append(tmp1)
+            queue.append(tmp1)
+            queue.sort(key=lambda k1:ord(k1[-1]))
+            if g==i:f+=1
+        for i in tmp:res.append(i)
+        if(f==n_g):break
+    print(res)
+    goal_node=[]
+    for i in res:
+        if 'G' in i:goal_node.append(i)
+    print('BMS Paths:',goal_node)
+    return res
+BMS(d,'S','G',2)
+def beamsearch(d,start,end,bw):
+    queue=[[0,start]]
+    fr=[]
+    goal=end
+    Beam=bw
+    gn=[]
+    f=0
+    n_g=0
+    f=n_g
+    while(len(queue)!=0):
+        print(queue)
+        tmp=queue.copy()
+        sl=[]
+        for j in range(len(tmp)):
+            cp=queue.pop(0)
+            n=cp[-1]
+            for i in d[n].keys():  
+                if i in cp:
+                    continue
+                el=cp+[i]
+                el[0]+=d[n][i]
+                sl.append(el)
+                sl.sort(key=lambda x: x[0])
+                if goal==i:
+                    f=1
+                    gn=el
+        queue=sl
+        if f==1:
+            fr.append(queue.copy())
+            break
+        queue=queue[:Beam+2]
+        fr.append(queue.copy())
+    print(fr)
+    print(gn)
+print("Beam Search...")
+beamsearch(d,'S','G',2)   
+def bfs(d,start,end):
+    queue=[[0,start]]
+    fr=[]
+    goal=end
+    gn=[]
+    f=0
+    n_g=0
+    f=n_g
+    while(len(queue)!=0):
+        print(queue)
+        tmp=queue.copy()
+        sl=[]
+        for j in range(len(tmp)):
+            cp=queue.pop(0)
+            n=cp[-1]
+            for i in d[n].keys():  
+                if i in cp:
+                    continue
+                el=cp+[i]
+                el[0]+=d[n][i]
+                sl.append(el)
+                sl=sorted(sl)
+                if goal==i:
+                    f=1
+                    gn=el
+        queue=sl
+        if f==1:
+            fr+=(queue.copy())
+            break
+        fr+=(queue.copy())
+    print(fr)
+    print(gn)
+    return fr
+print("BFS...")
+bfs(d,'S','G')
+def dfs(d,start,end):
+    queue=[[0,start]]
+    path=[]
+    while(len(queue)!=0):
+        cp=queue.pop(0)
+        cn=cp[-1]
+        if cn==end:
+            break
+        else:
+            for i in d[cn].keys():
+                if i not in cp:
+                    queue.append(cp+list(i))
+            queue=sorted(queue)
+            path.append(queue[0])
+    print(path)
+    return path
+print("DFS...")
+dfs(d,'S','G')
+def hill_climb(d_heur,start,end):
+    queue=[[0,start]]
+    path=[]
+    while(len(queue)!=0):
+        cp=queue.pop(0)
+        sl=[]
+        cn=cp[-1]
+        if cn==end:
+            break
+        else:
+            for i in d[cn].keys():
+                if i in cp :
+                    continue
+                el=cp+list(i)
+                el[0]=d[cn][i]
+                sl.append(el)
+        sl.sort(key=lambda x:x[0],reverse=True) 
+        for k in sl:
+            print(k)
+            queue.insert(0,k)
+        path.append(queue[0])
+    print(path)
+print("Hill Climbing...")
+hill_climb(d,'S','G')
+def branch_and_bound(d,start,end,oracle):
+    queue=[[0,start]]
+    path=[]
+    isgoal=0
+    gn=[]
+    while(len(queue)!=0):
+        sl=[]
+        cp=queue.pop(0)
+        cn=cp[-1]
+        if cn==end:
+                gn=el
+                break
+        for i in d[cn].keys():
+            if i in cp:
+                continue
+            elif cp[0]+d[cn][i]<=oracle:
+                el=cp+list(i)
+                el[0]+=d[cn][i]
+                sl.append(el)
+                sl.sort(key=lambda x:x[0])
+                queue.append(el)
+        sl.sort(key=lambda x:x[0])
+        for i in sl:path.append(i)
+    print(path)
+    return path
+print("Branch & Bound...")
+branch_and_bound(d,'S','G',11)
+def branch_and_bound_EL(d,start,end,oracle):
+    queue=[[0,start]]
+    path=[]
+    isgoal=0
+    gn=[]
+    vis=[]
+    while(len(queue)!=0):
+        sl=[]
+        cp=queue.pop(0)
+        cn=cp[-1]
+        if cn==end:  
+                gn=el
+                break
+        for i in d[cn].keys():
+            if i in cp:
+                continue
+            elif cp[0]+d[cn][i]<=oracle and i not in vis: 
+                vis.append(i)
+                el=cp+list(i)
+                el[0]+=d[cn][i]
+                sl.append(el)
+                sl.sort(key=lambda x:x[0])
+                queue.append(el)
+        sl.sort(key=lambda x:x[0])
+        for i in sl:path.append(i)
+    print(vis)
+    return path
+print("B&B with EL...")
+branch_and_bound_EL(d,'S','G',11)
+def oracle_cost_heur(d,start,end,d_heuristic,max_no_goalcutoff):
+    queue=[[0,start]]
+    res=[]
+    g='G'
+    f=0
+    n_g=max_no_goalcutoff
+    while (len(queue)!=0):
+        tmp=[]
+        curr=queue.pop(0)       
+        currnode=curr[-1]           
+        for i in d[currnode].keys():
+            if i in curr:continue 
+            tmp1=curr+list(i)
+            tmp1[0]=curr[0]+d[currnode][i]+d_heuristic[currnode][i]
+            tmp.append(tmp1)
+            queue.append(tmp1)
+            queue.sort(key=lambda k1:k1[0]) 
+            if g==i:f+=1
+        for i in tmp:res.append(i)
+        if(f==n_g):break
+    print(res)
+    goal_node=[]
+    for i in res:
+        if end in i:goal_node.append(i)
+    return goal_node[0][0]
+    print('Oracle Paths:',goal_node)
+print("Oracle with Cost & Heuristics...")
+oracle_cost_heur(d,'S','G',d_h,2)
+def A_star_search(d,start,end,d_heur,oracle_cost_heur):
+    queue=[[0,start]]
+    path=[]
+    isgoal=0
+    gn=[]
+    vis=[]
+    while(len(queue)!=0):
+        sl=[]
+        cp=queue.pop(0)
+        cn=cp[-1]
+        for i in d[cn].keys():
+            if i in cp:
+                continue
+            elif cp[0]+d[cn][i]<=oracle_cost_heur and i not in vis : 
+                vis.append(i)
+                el=cp+list(i)
+                el[0]+=d[cn][i]+d_heur[cn][i]
+                sl.append(el)
+                sl.sort(key=lambda x:x[0])
+                queue.append(el)
+                if cn==end:
+                    isgoal=1
+                    gn=el
+                    break
+        sl.sort(key=lambda x:x[0])
+        for i in sl:path.append(i)
+        if(isgoal==1):break
+    print(vis)
+    return path
+print("A* Algorithm...")
+A_star_search(d,'S','G',d_h,oracle_cost_heur(d,'S','G',d_h,2))
+def bestfirst(d,s,e):
+    queue=[[0,s]]
+    res=[]
+    f=0
+    while(len(queue)!=0):
+        u=queue.pop(0)
+        if(u==e):
+            break
+        else:
+            cn=u[-1]
+            for i in d[cn].keys():
+                if i in u:
+                    continue
+                if i=='G':
+                    f=1
+                else:
+                    t1=u+[i]
+                    t1[0]+=d[cn][i]
+                    queue.append(t1)
+            queue.sort(key=lambda k:k[0])   
+        res+=[u]
+        if(f==1):
+                break
+    return res
+print("Best First Search...")
+print(bestfirst(d,'S','G'))
